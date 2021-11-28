@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ServerCall from '../Components/ServerCall';
 
 export default function Login({ props }) {
@@ -7,17 +7,29 @@ export default function Login({ props }) {
 		email: '',
 		password: '',
 	});
+	const navigate = useNavigate();
 	const handleChange = (e) => {
-		const { id, value } = e.target;
+		const { name, value } = e.target;
 		setFormData((prevState) => ({
 			...prevState,
-			[id]: value,
+			[name]: value,
 		}));
 	};
-	const handleSubmitClick = (e) => {
+	const handleSubmitClick = async (e) => {
 		e.preventDefault();
 		if (formData.password.length) {
-			ServerCall.auth('auth/login', { formData });
+			try {
+				let response = await ServerCall.auth("auth/login", {
+				  email: formData.email,
+				  password: formData.password,
+				});
+				if (response.status) {
+					window.localStorage.setItem('user', response.data.token);
+				  navigate("/");
+				}
+			  } catch (error) {
+				console.log(error.message);
+			  }
 		} else {
 			props.showError('Enter Password');
 		}
